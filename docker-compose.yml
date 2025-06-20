@@ -1,0 +1,24 @@
+# 开发环境 Docker Compose 配置
+services:
+  tem-api:
+    build: .
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env.development
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src # 开发环境挂载源码（可选）
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, wget, --quiet, --tries=1, --spider, 'http://localhost:3000/api']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tem-api-network
+
+networks:
+  tem-api-network:
+    driver: bridge
