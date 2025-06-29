@@ -1,1 +1,1 @@
-export * from './serialize-response.decorator'
+export * from './response.decorator'

@@ -1,10 +1,9 @@
 import { Body, Controller, Get, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger'
 
-import { SerializeResponse } from 'src/shared'
-import { User } from '../../users/entities/user.entity'
-import { AuthResponseDto, ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from '../dtos'
-import { JwtAuthGuard } from '../guards/jwt-auth.guard'
+import { JwtAuthGuard, Response } from 'src/shared'
+import { UserEntity } from '../../users/entities'
+import { ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from '../dtos'
 import { AuthService } from '../services/auth.service'
 
 /**
@@ -16,9 +15,12 @@ import { AuthService } from '../services/auth.service'
  * 3. 安全优先 - 合理的错误处理和验证
  */
 @ApiTags('用户认证')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
 
   /**
    * 用户注册
@@ -26,7 +28,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: '用户注册' })
   @ApiBody({ type: RegisterDto })
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
+  async register(@Body() registerDto: RegisterDto) {
     return await this.authService.register(registerDto)
   }
 
@@ -36,7 +38,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: '用户登录' })
   @ApiBody({ type: LoginDto })
-  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto)
   }
 
@@ -46,17 +48,12 @@ export class AuthController {
    */
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: '获取当前用户信息' })
-  @SerializeResponse({
-    strategy: 'standard',
-    exclude: ['passwordHash', 'isDeleted'],
-    message: '用户信息获取成功',
+  @Response({
+    groups: ['profile'],
   })
-  async getProfile(@Request() req: { user: User }) {
-    const user = req.user
-
-    return user
+  async getProfile(@Request() req: { user: UserEntity }) {
+    return req.user
   }
 
   /**
@@ -65,11 +62,10 @@ export class AuthController {
    */
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: '修改密码' })
   @ApiBody({ type: ChangePasswordDto })
   async changePassword(
-    @Request() req: { user: User },
+    @Request() req: { user: UserEntity },
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
     return await this.authService.changePassword(req.user.id, changePasswordDto)
@@ -82,7 +78,7 @@ export class AuthController {
   @Post('refresh')
   @ApiOperation({ summary: '刷新访问令牌' })
   @ApiBody({ type: RefreshTokenDto })
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthResponseDto> {
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return await this.authService.refreshAccessToken(refreshTokenDto)
   }
 
@@ -92,12 +88,8 @@ export class AuthController {
    */
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: '用户注销' })
-  @SerializeResponse({
-    strategy: 'raw',
-  })
-  async logout(@Request() req: { user: User, headers: { authorization?: string } }): Promise<{ message: string }> {
+  async logout(@Request() req: { user: UserEntity, headers: { authorization?: string } }): Promise<{ message: string }> {
     // 从请求头中提取token
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

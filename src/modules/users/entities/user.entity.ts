@@ -1,12 +1,14 @@
-import { Entity, EntityRepositoryType, Property, Unique } from '@mikro-orm/core'
-import { BaseEntity } from '../../database/entities'
+import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property, Unique } from '@mikro-orm/core'
+import { ArticleEntity } from '@modules/articles'
+import { BaseEntity } from '@modules/database'
+import { Exclude, Expose } from 'class-transformer'
 import { UserRepository } from '../repositories/user.repository'
 
 /**
  * 用户实体 - 支持多种登录方式、状态管理与扩展信息
  */
 @Entity({ tableName: 'users', repository: () => UserRepository })
-export class User extends BaseEntity {
+export class UserEntity extends BaseEntity {
   [EntityRepositoryType]?: UserRepository
 
   /**
@@ -33,8 +35,9 @@ export class User extends BaseEntity {
   /**
    * 密码哈希值 - 存储加密后的密码（不能存明文）
    */
-  @Property({ length: 100, default: 'temp_password_hash' })
-  passwordHash: string = 'temp_password_hash'
+  @Property({ length: 100 })
+  @Exclude()
+  passwordHash!: string
 
   /**
    * 昵称 - 用户展示名，可选
@@ -58,6 +61,7 @@ export class User extends BaseEntity {
    * 是否逻辑删除 - 可用于软删除（隐藏数据但不物理删除）
    */
   @Property({ default: false })
+  @Exclude()
   isDeleted: boolean = false
 
   /**
@@ -70,5 +74,18 @@ export class User extends BaseEntity {
    * 最近登录 IP - 安全审计用途
    */
   @Property({ nullable: true })
+  @Exclude()
   lastLoginIp?: string
+
+  /**
+   * 文章 - 用户发布的文章
+   * 级联持久化：创建用户时可以同时创建文章
+   * 不使用orphanRemoval：删除用户不会删除文章（保留历史数据）
+   */
+  @OneToMany(() => ArticleEntity, article => article.author, {
+    cascade: [Cascade.PERSIST],
+    orphanRemoval: false,
+  })
+  @Expose({ groups: ['profile'] })
+  articles = new Collection<ArticleEntity>(this)
 }

@@ -1,36 +1,218 @@
 {
-  "namespaces": [],
+  "namespaces": [
+    "public"
+  ],
+  "name": "public",
   "tables": [
     {
       "columns": {
         "id": {
           "name": "id",
-          "type": "int",
-          "unsigned": true,
+          "type": "serial",
+          "unsigned": false,
           "autoincrement": true,
           "primary": true,
           "nullable": false,
-          "length": null,
           "mappedType": "integer"
         },
         "created_at": {
           "name": "created_at",
-          "type": "datetime",
+          "type": "timestamptz",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": null,
+          "length": 6,
+          "default": "now()",
           "mappedType": "datetime"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "datetime",
+          "type": "timestamptz",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": null,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 100,
+          "comment": "分类名称",
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "comment": "分类描述",
+          "mappedType": "text"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "comment": "排序",
+          "mappedType": "integer"
+        }
+      },
+      "name": "categories",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "keyName": "categories_name_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "categories_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 50,
+          "comment": "标签名称",
+          "mappedType": "string"
+        },
+        "usage_count": {
+          "name": "usage_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "comment": "使用次数",
+          "mappedType": "integer"
+        }
+      },
+      "name": "tags",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "keyName": "tags_name_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "tags_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
           "mappedType": "datetime"
         },
         "username": {
@@ -71,7 +253,6 @@
           "primary": false,
           "nullable": false,
           "length": 100,
-          "default": "'temp_password_hash'",
           "mappedType": "string"
         },
         "nickname": {
@@ -96,34 +277,32 @@
         },
         "is_active": {
           "name": "is_active",
-          "type": "tinyint(1)",
+          "type": "boolean",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 1,
           "default": "true",
           "mappedType": "boolean"
         },
         "is_deleted": {
           "name": "is_deleted",
-          "type": "tinyint(1)",
+          "type": "boolean",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 1,
           "default": "false",
           "mappedType": "boolean"
         },
         "last_login_at": {
           "name": "last_login_at",
-          "type": "datetime",
+          "type": "timestamptz",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": null,
+          "length": 6,
           "mappedType": "datetime"
         },
         "last_login_ip": {
@@ -138,6 +317,7 @@
         }
       },
       "name": "users",
+      "schema": "public",
       "indexes": [
         {
           "columnNames": [
@@ -170,7 +350,7 @@
           "unique": true
         },
         {
-          "keyName": "PRIMARY",
+          "keyName": "users_pkey",
           "columnNames": [
             "id"
           ],
@@ -182,6 +362,227 @@
       ],
       "checks": [],
       "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(200)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 200,
+          "comment": "文章标题",
+          "mappedType": "string"
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "comment": "文章内容",
+          "mappedType": "text"
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "comment": "文章摘要",
+          "mappedType": "text"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'draft'",
+          "enumItems": [
+            "draft",
+            "published",
+            "archived"
+          ],
+          "mappedType": "enum"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "comment": "发布时间",
+          "mappedType": "datetime"
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        }
+      },
+      "name": "articles",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "articles_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "articles_author_id_foreign": {
+          "constraintName": "articles_author_id_foreign",
+          "columnNames": [
+            "author_id"
+          ],
+          "localTableName": "public.articles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "articles_category_id_foreign": {
+          "constraintName": "articles_category_id_foreign",
+          "columnNames": [
+            "category_id"
+          ],
+          "localTableName": "public.articles",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.categories",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "article_entity_id": {
+          "name": "article_entity_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "tag_entity_id": {
+          "name": "tag_entity_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        }
+      },
+      "name": "articles_tags",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "articles_tags_pkey",
+          "columnNames": [
+            "article_entity_id",
+            "tag_entity_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "articles_tags_article_entity_id_foreign": {
+          "constraintName": "articles_tags_article_entity_id_foreign",
+          "columnNames": [
+            "article_entity_id"
+          ],
+          "localTableName": "public.articles_tags",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.articles",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "articles_tags_tag_entity_id_foreign": {
+          "constraintName": "articles_tags_tag_entity_id_foreign",
+          "columnNames": [
+            "tag_entity_id"
+          ],
+          "localTableName": "public.articles_tags",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.tags",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      },
       "nativeEnums": {}
     }
   ],

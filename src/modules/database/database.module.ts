@@ -1,5 +1,5 @@
-import { defineConfig, MySqlDriver } from '@mikro-orm/mysql'
 import { MikroOrmModule } from '@mikro-orm/nestjs'
+import { defineConfig, PostgreSqlDriver } from '@mikro-orm/postgresql'
 import { Module } from '@nestjs/common'
 
 import { ConfigService } from '../config/services'
@@ -38,7 +38,7 @@ import { createMikroOrmLogger, getMikroOrmDebugConfig, LoggerService } from '../
           allowGlobalContext: true,
         })
       },
-      driver: MySqlDriver,
+      driver: PostgreSqlDriver,
     }),
   ],
 })

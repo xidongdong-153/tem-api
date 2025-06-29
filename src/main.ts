@@ -1,13 +1,13 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import type { SwaggerConfig } from './config'
+import { ConfigService } from '@modules/config/services'
+import { LoggerService, NestLoggerAdapter } from '@modules/logger'
 import { ValidationPipe } from '@nestjs/common'
+
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
-
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
-import { ConfigService } from './modules/config/services'
-import { LoggerService, NestLoggerAdapter } from './modules/logger'
 
 /**
  * 创建 NestJS 应用实例
@@ -69,6 +69,8 @@ function setupSwagger(app: NestFastifyApplication, swaggerConfig: SwaggerConfig)
   SwaggerModule.setup(swaggerConfig.path, app, document, {
     swaggerOptions: {
       persistAuthorization: swaggerConfig.persistAuthorization,
+      docExpansion: 'none', // 折叠所有标签和操作
+      filter: true, // 启用搜索过滤
     },
   })
 }

@@ -1,10 +1,11 @@
+import type { FilterQuery } from '@mikro-orm/core'
+import type { PaginationQueryDto } from '../../../shared/dtos'
 import type { CreateUserDto } from '../dtos/create-user.dto'
-import type { PaginationQueryDto } from '../dtos/pagination-query.dto'
 import type { UpdateUserDto } from '../dtos/update-user.dto'
 
+import { LoggerService } from '@modules/logger'
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
-import { LoggerService } from '../../logger'
-import { User } from '../entities/user.entity'
+import { UserEntity } from '../entities'
 import { UserRepository } from '../repositories'
 
 /**
@@ -20,7 +21,7 @@ export class UsersService {
   /**
    * 创建新用户
    */
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto, passwordHash?: string): Promise<UserEntity> {
     // 检查用户名是否已存在
     const existingUser = await this.userRepository.checkUserExists(
       createUserDto.username,
@@ -41,7 +42,7 @@ export class UsersService {
       username: createUserDto.username,
       email: createUserDto.email,
       nickname: createUserDto.nickname,
-    })
+    }, passwordHash)
 
     this.logger.info(`User ${user.username}(ID: ${user.id}) created successfully`)
 
@@ -51,21 +52,37 @@ export class UsersService {
   /**
    * 获取所有用户列表
    */
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<UserEntity[]> {
     return await this.userRepository.findAllActive()
   }
 
   /**
    * 分页获取用户列表
    */
-  async findAllPaginated(query: PaginationQueryDto) {
-    return await this.userRepository.findPaginated(query)
+  async findPaginated(query: PaginationQueryDto) {
+    // 构建搜索条件
+    const whereConditions: FilterQuery<UserEntity> = { isDeleted: false }
+
+    // 如果有搜索关键词，则在多个字段中进行模糊搜索
+    if (query.search && query.search.trim()) {
+      const searchTerm = `%${query.search.trim()}%`
+      whereConditions.$or = [
+        { username: { $like: searchTerm } },
+        { email: { $like: searchTerm } },
+        { nickname: { $like: searchTerm } },
+        { phone: { $like: searchTerm } },
+      ]
+    }
+
+    return await this.userRepository.findPaginated(query, {
+      where: whereConditions,
+    })
   }
 
   /**
    * 根据ID查找用户
    */
-  async findOne(id: number): Promise<User> {
+  async findOne(id: number): Promise<UserEntity> {
     const user = await this.userRepository.findActiveById(id)
 
     if (!user) {
@@ -76,23 +93,16 @@ export class UsersService {
   }
 
   /**
-   * 根据用户名查找用户
-   */
-  async findByUsername(username: string): Promise<User | null> {
-    return await this.userRepository.findByUsername(username)
-  }
-
-  /**
    * 根据邮箱查找用户
    */
-  async findByEmail(email: string): Promise<User | null> {
-    return await this.userRepository.findByEmail(email)
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    return await this.userRepository.findOne({ email })
   }
 
   /**
    * 更新用户信息
    */
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOne(id) // 复用查找逻辑
 
     // 检查用户名和邮箱是否已被其他用户使用
@@ -149,7 +159,7 @@ export class UsersService {
    * @param id 用户ID
    * @param passwordHash 新的密码哈希值
    */
-  async updatePassword(id: number, passwordHash: string): Promise<User> {
+  async updatePassword(id: number, passwordHash: string): Promise<UserEntity> {
     const user = await this.findOne(id)
 
     const updatedUser = await this.userRepository.updateUserPassword(user, passwordHash)

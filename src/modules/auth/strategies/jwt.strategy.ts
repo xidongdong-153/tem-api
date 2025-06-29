@@ -3,17 +3,12 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { ConfigService } from '../../config/services/config.service'
-import { User } from '../../users/entities/user.entity'
+import { UserEntity } from '../../users/entities'
 import { UsersService } from '../../users/services/users.service'
 import { TokenBlacklistService } from '../services/token-blacklist.service'
 
 /**
  * JWT策略 - 用于验证JWT令牌
- *
- * 设计原则：
- * 1. 安全优先 - 验证token有效性和用户状态
- * 2. 性能考虑 - 缓存用户信息（后续优化）
- * 3. 错误处理 - 统一的异常处理
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -36,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * 验证JWT载荷
    * 这个方法会在JWT验证成功后自动调用
    */
-  async validate(req: Request, payload: { sub: number, email: string, username: string }): Promise<User> {
+  async validate(req: Request, payload: { sub: number, email: string, username: string }): Promise<UserEntity> {
     const { sub: userId } = payload
 
     // 从请求头中提取token

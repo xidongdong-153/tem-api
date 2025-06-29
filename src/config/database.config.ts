@@ -23,10 +23,10 @@ export interface DatabaseConfig {
 function getConnectionConfig() {
   return {
     host: process.env.DB_HOST ?? 'localhost',
-    port: Number.parseInt(process.env.DB_PORT ?? '3306', 10),
-    username: process.env.DB_USERNAME ?? 'root',
-    password: process.env.DB_PASSWORD ?? '',
-    dbName: process.env.DB_DATABASE_NAME ?? 'tem_api',
+    port: Number.parseInt(process.env.DB_PORT ?? '5432', 10),
+    username: process.env.DB_USERNAME ?? 'tem_user',
+    password: process.env.DB_PASSWORD ?? 'tem123456',
+    dbName: process.env.DB_DATABASE_NAME ?? 'tem_dev',
   }
 }
 

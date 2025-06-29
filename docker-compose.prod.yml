@@ -25,7 +25,7 @@ services:
           cpus: '0.25'
     networks:
       - tem-api-network
-      
+
 networks:
   tem-api-network:
     driver: bridge

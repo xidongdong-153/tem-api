@@ -5,7 +5,15 @@ import { LoggerService } from '../../logger/services/logger.service'
 
 /**
  * Token黑名单服务
- * 管理被撤销的JWT token，防止注销后的token继续使用
+ *
+ * 核心职责：
+ * 1. 维护token黑名单存储
+ * 2. 提供token状态检查接口
+ * 3. 自动清理过期token
+ * 4. 记录操作日志
+ *
+ * 注意：此服务只负责底层的黑名单管理
+ * 高级token操作（如用户token撤销）请使用 AuthService
  */
 @Injectable()
 export class TokenBlacklistService {
@@ -71,21 +79,20 @@ export class TokenBlacklistService {
   }
 
   /**
-   * 强制下线指定用户的所有token
-   * 通过用户ID将该用户的所有token加入黑名单
+   * 获取黑名单统计信息（用于监控和调试）
    */
-  blacklistUserTokens(userId: number, reason: string = 'Force logout'): void {
-    let count = 0
+  getStats(): { total: number, byUser: Map<number, number> } {
+    const byUser = new Map<number, number>()
 
-    // 遍历现有黑名单，找到该用户的token（这里只是示例，实际需要token与用户的映射）
     for (const [_token, entry] of this.blacklistedTokens.entries()) {
-      if (entry.userId === userId) {
-        entry.reason = reason
-        count++
-      }
+      const currentCount = byUser.get(entry.userId) || 0
+      byUser.set(entry.userId, currentCount + 1)
     }
 
-    this.logger.info(`${count} tokens for user ${userId} have been forced offline, reason: ${reason}`)
+    return {
+      total: this.blacklistedTokens.size,
+      byUser,
+    }
   }
 
   /**

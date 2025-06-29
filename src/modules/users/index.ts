@@ -2,7 +2,7 @@
 export { CreateUserDto } from './dtos/create-user.dto'
 
 // 导出实体
-export { User } from './entities/user.entity'
+export * from './entities'
 
 // 导出服务
 export { UsersService } from './services/users.service'

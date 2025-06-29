@@ -1,18 +1,14 @@
-import { EntityManager } from '@mikro-orm/mysql'
 import { Controller, Get, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 
-import { JwtAuthGuard } from './modules/auth/guards'
 import { ConfigService } from './modules/config/services'
-import { LoggerService } from './modules/logger'
+import { JwtAuthGuard } from './shared'
 
 @ApiTags('App')
 @Controller()
 export class AppController {
   constructor(
-    private readonly logger: LoggerService,
     private readonly configService: ConfigService,
-    private readonly em: EntityManager,
   ) {}
 
   @Get()

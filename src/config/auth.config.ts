@@ -13,6 +13,8 @@ export interface AuthConfig {
   bcryptRounds: number
   /** 刷新令牌过期时间 */
   refreshTokenExpiresIn: string
+  /** 是否启用单设备登录 */
+  singleDeviceLogin?: boolean
 }
 
 export default registerAs('auth', (): AuthConfig => ({
@@ -22,4 +24,5 @@ export default registerAs('auth', (): AuthConfig => ({
   jwtAudience: process.env.JWT_AUDIENCE,
   bcryptRounds: Number.parseInt(process.env.BCRYPT_ROUNDS ?? '10', 10),
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d',
+  singleDeviceLogin: process.env.SINGLE_DEVICE_LOGIN === 'true',
 }))

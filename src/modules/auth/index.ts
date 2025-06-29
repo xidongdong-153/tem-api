@@ -3,8 +3,6 @@ export { AuthModule } from './auth.module'
 export { AuthController } from './controllers'
 // DTOs导出
 export * from './dtos'
-// 守卫导出
-export { JwtAuthGuard } from './guards'
 
 // 服务导出
 export { AuthService, TokenBlacklistService } from './services'

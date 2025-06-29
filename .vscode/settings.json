@@ -75,22 +75,11 @@
     // 环境配置文件分组
     ".env.example": ".env.development,.env.docker,.env.production,.env.test,.env.local,.env.staging,.env",
 
-    // 测试文件分组
-    "jest.config.*": "jest.setup.*,jest.*.config.*",
-    "vitest.config.*": "vitest.setup.*",
-
-    // NestJS特定配置分组
-    "nest-cli.json": "mikro-orm.config.ts,.swcrc",
-
     // 文档文件分组
     "README.md": "CHANGELOG.md,CONTRIBUTING.md,LICENSE,AUTHORS,CONTRIBUTORS",
 
     // 脚本文件分组（基于您的项目结构）
-    "scripts": "*.sh,deploy.sh,setup-*.sh",
-
-    // Index文件分组模式
-    "index.ts": "*.ts,!*.spec.ts,!*.test.ts,!*.d.ts",
-    "index.js": "*.js,!*.spec.js,!*.test.js"
+    "scripts": "*.sh,deploy.sh,setup-*.sh"
   },
 
   // 文件排序配置

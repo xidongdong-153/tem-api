@@ -1,15 +1,18 @@
+import { LoggerModule } from '@modules/logger'
 import { Module } from '@nestjs/common'
 import { ConfigModule as NestConfigModule } from '@nestjs/config'
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { appConfig, authConfig, databaseConfig, loggerConfig, swaggerConfig, validationSchema } from './config'
+import { ArticlesModule } from './modules/articles'
 import { AuthModule } from './modules/auth/auth.module'
+import { CategoriesModule } from './modules/categories'
 import { ConfigModule } from './modules/config/config.module'
 import { DatabaseModule } from './modules/database/database.module'
-import { LoggerModule } from './modules/logger/logger.module'
+import { TagsModule } from './modules/tags'
 import { UsersModule } from './modules/users'
-import { GlobalExceptionFilter, HttpLoggingInterceptor, PaginationResponseStrategy, ResponseSerializationInterceptor, StandardResponseStrategy } from './shared'
+import { GlobalExceptionFilter, ResponseInterceptor } from './shared'
 
 @Module({
   imports: [
@@ -32,25 +35,21 @@ import { GlobalExceptionFilter, HttpLoggingInterceptor, PaginationResponseStrate
     DatabaseModule,
     UsersModule,
     AuthModule,
+    ArticlesModule,
+    CategoriesModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [
-    // 策略提供者
-    StandardResponseStrategy,
-    PaginationResponseStrategy,
     // 全局异常过滤器
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
-    // 拦截器提供者
+    // 全局响应拦截器
     {
       provide: APP_INTERCEPTOR,
-      useClass: HttpLoggingInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ResponseSerializationInterceptor,
+      useClass: ResponseInterceptor,
     },
   ],
 })
