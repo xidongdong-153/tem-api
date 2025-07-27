@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { ConfigService } from '../../config/services/config.service'
 import { UserEntity } from '../../users/entities'
 import { UsersService } from '../../users/services/users.service'
+import { AuthService } from '../services/auth.service'
 import { TokenBlacklistService } from '../services/token-blacklist.service'
 
 /**
@@ -16,6 +17,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -45,6 +48,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // 检查token是否在黑名单中
     if (this.tokenBlacklistService.isBlacklisted(token)) {
       throw new UnauthorizedException('Token has been revoked')
+    }
+
+    // 检查token是否在活跃列表中
+    if (!this.authService.isTokenActive(userId, token)) {
+      throw new UnauthorizedException('Token is no longer active')
     }
 
     // 根据用户ID查找用户

@@ -4,10 +4,11 @@ import type { RefreshTokenDto } from '../dtos/refresh-token.dto'
 import type { RegisterDto } from '../dtos/register.dto'
 
 import * as crypto from 'node:crypto'
+import { LoggerService } from '@modules/logger'
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import * as bcrypt from 'bcrypt'
 
+import * as bcrypt from 'bcrypt'
 import { ConfigService } from '../../config/services/config.service'
 import { UserEntity } from '../../users/entities'
 import { UsersService } from '../../users/services/users.service'
@@ -19,9 +20,11 @@ import { TokenBlacklistService } from './token-blacklist.service'
 @Injectable()
 export class AuthService {
   // 简单的内存存储，生产环境应使用Redis或数据库
+  // TODO: 生产环境建议使用Redis存储以支持多实例部署和持久化
   private readonly refreshTokens = new Map<string, { userId: number, expiresAt: Date }>()
 
   // 用户活跃token管理 - 存储用户ID到token的映射
+  // TODO: 生产环境建议使用Redis存储以支持多实例部署和持久化
   private readonly userActiveTokens = new Map<number, Set<string>>()
 
   constructor(
@@ -29,7 +32,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly tokenBlacklistService: TokenBlacklistService,
-  ) {}
+    private readonly logger: LoggerService,
+  ) {
+    // 每小时清理一次过期的刷新令牌
+    setInterval(() => this.cleanupExpiredRefreshTokens(), 60 * 60 * 1000)
+  }
 
   /**
    * 用户注册
@@ -46,55 +53,46 @@ export class AuthService {
     }, hashedPassword)
 
     // 生成并返回token（注册默认为首次登录）
-    return this.generateAuthResponse(user, { singleDevice: false })
+    return await this.generateAuthResponse(user, { singleDevice: false })
   }
 
   /**
    * 用户登录
    */
   async login(loginDto: LoginDto) {
-    // 验证用户凭据
+    // 验证用户凭据，失败时 validateUser 会直接抛出异常
     const user = await this.validateUser(loginDto.email, loginDto.password)
-
-    if (!user) {
-      throw new BadRequestException('Email or password is incorrect')
-    }
 
     // 可选：实现单设备登录（将之前的token失效）
     const singleDeviceLogin = this.configService.auth.singleDeviceLogin ?? false
 
-    if (singleDeviceLogin) {
-      await this.revokeUserTokens(user.id, 'New login from another device')
-    }
-
     // 生成并返回token
-    return this.generateAuthResponse(user, { singleDevice: singleDeviceLogin })
+    return await this.generateAuthResponse(user, { singleDevice: singleDeviceLogin })
   }
 
   /**
    * 验证用户凭据
    */
-  async validateUser(email: string, password: string): Promise<UserEntity | null> {
-    try {
-      // 通过邮箱查找用户
-      const user = await this.usersService.findByEmail(email)
+  async validateUser(email: string, password: string): Promise<UserEntity> {
+    const user = await this.usersService.findByEmail(email)
 
-      if (!user || !user.isActive) {
-        return null
-      }
-
-      // 验证密码
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
-
-      if (!isPasswordValid) {
-        return null
-      }
-
-      return user
+    // For security reasons, it's often better to use a generic error message.
+    // However, per your request, I'm providing specific messages.
+    if (!user) {
+      throw new UnauthorizedException('User not found')
     }
-    catch (error) {
-      return error
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User is disabled')
     }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Incorrect password')
+    }
+
+    return user
   }
 
   /**
@@ -122,13 +120,18 @@ export class AuthService {
     this.refreshTokens.delete(refreshToken)
 
     // 生成新的访问令牌和刷新令牌
-    return this.generateAuthResponse(user)
+    return await this.generateAuthResponse(user)
   }
 
   /**
    * 生成认证响应
    */
-  private generateAuthResponse(user: UserEntity, _options: { singleDevice?: boolean } = {}) {
+  private async generateAuthResponse(user: UserEntity, options: { singleDevice?: boolean } = {}) {
+    // 如果是单设备登录，先撤销该用户的所有旧token
+    if (options.singleDevice) {
+      await this.revokeUserTokens(user.id, 'New login from another device')
+    }
+
     const payload = {
       sub: user.id,
       email: user.email,
@@ -193,7 +196,7 @@ export class AuthService {
   private generateRefreshToken(userId: number): string {
     const token = crypto.randomBytes(32).toString('hex')
     const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + this.parseExpiresInToSeconds(this.configService.auth.refreshTokenExpiresIn))
+    expiresAt.setSeconds(expiresAt.getSeconds() + this.parseExpiresInToSeconds(this.configService.auth.refreshTokenExpiresIn))
 
     this.refreshTokens.set(token, { userId, expiresAt })
     return token
@@ -234,7 +237,7 @@ export class AuthService {
   }
 
   /**
-   * 用户注销 - 将token加入黑名单
+   * 用户注销 - 将token加入黑名单并撤销刷新令牌
    */
   async logout(token: string, userId: number): Promise<{ message: string }> {
     // 将token加入黑名单
@@ -251,6 +254,13 @@ export class AuthService {
       }
     }
 
+    // 撤销该用户的所有刷新令牌
+    for (const [refreshToken, data] of this.refreshTokens.entries()) {
+      if (data.userId === userId) {
+        this.refreshTokens.delete(refreshToken)
+      }
+    }
+
     return { message: 'Logout successful' }
   }
 
@@ -262,6 +272,34 @@ export class AuthService {
     await this.revokeUserTokens(userId, reason)
 
     return { message: 'User has been forced offline' }
+  }
+
+  /**
+   * 清理过期的刷新令牌
+   * 定时任务：每小时自动执行一次，清理过期的刷新令牌以防止内存泄漏
+   */
+  private cleanupExpiredRefreshTokens(): void {
+    const now = new Date()
+    let cleanedCount = 0
+
+    for (const [refreshToken, data] of this.refreshTokens.entries()) {
+      if (data.expiresAt < now) {
+        this.refreshTokens.delete(refreshToken)
+        cleanedCount++
+      }
+    }
+
+    if (cleanedCount > 0) {
+      this.logger.info(`Cleaned ${cleanedCount} expired refresh tokens`)
+    }
+  }
+
+  /**
+   * 检查token是否在活跃列表中
+   */
+  isTokenActive(userId: number, token: string): boolean {
+    const userTokens = this.userActiveTokens.get(userId)
+    return userTokens ? userTokens.has(token) : false
   }
 
   /**
