@@ -1,9 +1,9 @@
 import { UserEntity } from '@modules/users/entities'
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Request, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Request, UseGuards, ValidationPipe } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@shared/guards'
 import { Response } from '@shared/interceptors'
-import { CreateArticleDto, UpdateArticleDto } from '../dtos'
+import { CreateArticleDto, ListArticlesDto, UpdateArticleDto } from '../dtos'
 import { ArticleService } from '../services'
 
 @Controller('articles')
@@ -12,6 +12,15 @@ import { ArticleService } from '../services'
 @UseGuards(JwtAuthGuard)
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
+
+  @Get()
+  @ApiOperation({ summary: '分页查询文章列表' })
+  @Response({
+    relations: 'count',
+  })
+  async findPaginated(@Query(ValidationPipe) listDto: ListArticlesDto) {
+    return this.articleService.findPaginated(listDto)
+  }
 
   @Post()
   @ApiOperation({ summary: '创建文章' })

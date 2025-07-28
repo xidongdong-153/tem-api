@@ -1,8 +1,9 @@
+import type { FilterQuery } from '@mikro-orm/core'
 import { CategoryEntity } from '@modules/categories/entities'
 import { BaseRepository } from '@modules/database'
 import { TagEntity } from '@modules/tags/entities'
 import { UserEntity } from '@modules/users/entities'
-import { CreateArticleDto, UpdateArticleDto } from '../dtos'
+import { CreateArticleDto, ListArticlesDto, UpdateArticleDto } from '../dtos'
 import { ArticleEntity } from '../entities/article.entity'
 
 /**
@@ -120,5 +121,70 @@ export class ArticleRepository extends BaseRepository<ArticleEntity> {
 
     await em.flush()
     return article
+  }
+
+  /**
+   * 构建文章列表查询条件
+   * @param listDto 分页查询参数
+   * @returns 查询条件对象
+   */
+  buildListQuery(listDto: ListArticlesDto): FilterQuery<ArticleEntity> {
+    const where: FilterQuery<ArticleEntity> = {}
+
+    // 作者ID过滤
+    if (listDto.authorId) {
+      where.author = { id: listDto.authorId }
+    }
+
+    // 分类ID过滤
+    if (listDto.categoryId) {
+      where.category = { id: listDto.categoryId }
+    }
+
+    // 标签ID过滤
+    if (listDto.tagId) {
+      where.tags = { id: listDto.tagId }
+    }
+
+    // 状态过滤
+    if (listDto.status) {
+      where.status = listDto.status
+    }
+
+    // 标题搜索
+    if (listDto.title) {
+      where.title = { $ilike: `%${listDto.title}%` }
+    }
+
+    // 内容搜索
+    if (listDto.content) {
+      where.content = { $ilike: `%${listDto.content}%` }
+    }
+
+    // 通用搜索（搜索标题和内容）
+    if (listDto.search) {
+      where.$or = [
+        { title: { $ilike: `%${listDto.search}%` } },
+        { content: { $ilike: `%${listDto.search}%` } },
+        { summary: { $ilike: `%${listDto.search}%` } },
+      ]
+    }
+
+    return where
+  }
+
+  /**
+   * 分页查询文章列表
+   * @param listDto 分页查询参数
+   * @returns 分页查询结果
+   */
+  async findArticlesPaginated(listDto: ListArticlesDto) {
+    const where = this.buildListQuery(listDto)
+
+    return this.findPaginated(listDto, {
+      where,
+      populate: ['author', 'category', 'tags'],
+      strategy: 'select-in',
+    })
   }
 }

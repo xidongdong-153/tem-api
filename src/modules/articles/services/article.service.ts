@@ -1,6 +1,6 @@
 import { UserEntity } from '@modules/users/entities'
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { CreateArticleDto, UpdateArticleDto } from '../dtos'
+import { CreateArticleDto, ListArticlesDto, UpdateArticleDto } from '../dtos'
 import { ArticleEntity } from '../entities'
 import { ArticleRepository } from '../repositories/article.repository'
 
@@ -65,5 +65,14 @@ export class ArticleService {
     }
 
     return this.articleRepository.updateArticle(article, updateArticleDto)
+  }
+
+  /**
+   * 分页查询文章列表
+   * @param listDto 分页查询参数
+   * @returns 分页查询结果
+   */
+  async findPaginated(listDto: ListArticlesDto) {
+    return this.articleRepository.findArticlesPaginated(listDto)
   }
 }
