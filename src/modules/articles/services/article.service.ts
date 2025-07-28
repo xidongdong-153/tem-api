@@ -1,11 +1,13 @@
 import { UserEntity } from '@modules/users/entities'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { CreateArticleDto, ListArticlesDto, UpdateArticleDto } from '../dtos'
 import { ArticleEntity } from '../entities'
 import { ArticleRepository } from '../repositories/article.repository'
 
 @Injectable()
 export class ArticleService {
+  private readonly logger = new Logger(ArticleService.name)
+
   constructor(
     private readonly articleRepository: ArticleRepository,
   ) {}
@@ -74,5 +76,69 @@ export class ArticleService {
    */
   async findPaginated(listDto: ListArticlesDto) {
     return this.articleRepository.findArticlesPaginated(listDto)
+  }
+
+  /**
+   * 根据ID查找文章（用于删除操作）
+   */
+  async findById(id: number): Promise<ArticleEntity> {
+    const article = await this.articleRepository.findOne({ id })
+    if (!article) {
+      throw new NotFoundException('Article does not exist')
+    }
+    return article
+  }
+
+  /**
+   * 软删除文章
+   */
+  async softDelete(id: number): Promise<void> {
+    const article = await this.findById(id)
+    
+    await this.articleRepository.softDelete(article)
+    this.logger.log(`Article ${article.title}(ID: ${article.id}) has been soft deleted`)
+  }
+
+  /**
+   * 恢复被软删除的文章
+   */
+  async restore(id: number): Promise<ArticleEntity> {
+    // 查找时需要禁用softDelete过滤器，才能找到被软删除的实体
+    const article = await this.articleRepository.findOne(
+      { id },
+      { filters: { softDelete: false } },
+    )
+
+    if (!article) {
+      throw new NotFoundException('Article does not exist')
+    }
+
+    if (!article.deletedAt) {
+      throw new ConflictException('Article is not deleted')
+    }
+
+    await this.articleRepository.restore(article)
+    this.logger.log(`Article ${article.title}(ID: ${article.id}) has been restored`)
+
+    return article
+  }
+
+  /**
+   * 硬删除文章（真正从数据库中删除）
+   * 注意：这个方法应该谨慎使用，建议只在特殊情况下使用
+   */
+  async hardDelete(id: number): Promise<void> {
+    // 查找时需要禁用softDelete过滤器
+    const article = await this.articleRepository.findOne(
+      { id },
+      { filters: { softDelete: false } },
+    )
+
+    if (!article) {
+      throw new NotFoundException('Article does not exist')
+    }
+
+    await this.articleRepository.hardDelete(article)
+    this.logger.warn(`Article ${article.title}(ID: ${article.id}) has been permanently deleted`)
   }
 }
