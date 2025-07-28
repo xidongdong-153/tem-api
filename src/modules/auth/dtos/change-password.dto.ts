@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNotEmpty, IsString, MinLength } from 'class-validator'
-import { IsStrongPassword } from '../decorators'
+import { IsStrongPassword, Match } from '../decorators'
 
 /**
  * 修改密码DTO
@@ -32,5 +32,6 @@ export class ChangePasswordDto {
   })
   @IsNotEmpty({ message: '确认密码不能为空' })
   @IsString({ message: '确认密码必须是字符串' })
+  @Match('newPassword', { message: '两次输入的密码不一致' })
   confirmPassword!: string
 }

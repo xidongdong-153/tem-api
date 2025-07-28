@@ -76,20 +76,21 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<UserEntity> {
     const user = await this.usersService.findByEmail(email)
 
-    // For security reasons, it's often better to use a generic error message.
-    // However, per your request, I'm providing specific messages.
     if (!user) {
-      throw new UnauthorizedException('User not found')
+      this.logger.warn(`[Auth] Failed login attempt for email "${email}": User not found.`)
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('User is disabled')
+      this.logger.warn(`[Auth] Failed login attempt for email "${email}": User is disabled.`)
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Incorrect password')
+      this.logger.warn(`[Auth] Failed login attempt for email "${email}": Incorrect password.`)
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     return user
@@ -206,12 +207,7 @@ export class AuthService {
    * 修改密码
    */
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
-    const { currentPassword, newPassword, confirmPassword } = changePasswordDto
-
-    // 验证新密码确认
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('New password does not match confirm password')
-    }
+    const { currentPassword, newPassword } = changePasswordDto
 
     // 验证新密码不能与旧密码相同
     if (currentPassword === newPassword) {
