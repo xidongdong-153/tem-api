@@ -61,17 +61,19 @@ export class UsersService {
    */
   async findPaginated(query: PaginationQueryDto) {
     // 构建搜索条件
-    const whereConditions: FilterQuery<UserEntity> = { isDeleted: false }
+    let whereConditions: FilterQuery<UserEntity> = {}
 
     // 如果有搜索关键词，则在多个字段中进行模糊搜索
     if (query.search && query.search.trim()) {
       const searchTerm = `%${query.search.trim()}%`
-      whereConditions.$or = [
-        { username: { $like: searchTerm } },
-        { email: { $like: searchTerm } },
-        { nickname: { $like: searchTerm } },
-        { phone: { $like: searchTerm } },
-      ]
+      whereConditions = {
+        $or: [
+          { username: { $like: searchTerm } },
+          { email: { $like: searchTerm } },
+          { nickname: { $like: searchTerm } },
+          { phone: { $like: searchTerm } },
+        ],
+      }
     }
 
     return await this.userRepository.findPaginated(query, {
@@ -140,6 +142,33 @@ export class UsersService {
     await this.userRepository.softDelete(user)
 
     this.logger.info(`User ${user.username}(ID: ${user.id}) has been soft deleted`)
+  }
+
+  /**
+   * 恢复被软删除的用户
+   */
+  async restore(id: number): Promise<UserEntity> {
+    // 查找时需要禁用softDelete过滤器，才能找到被软删除的实体
+    const user = await this.userRepository.findOne(
+      { id },
+      { filters: { softDelete: false } },
+    )
+
+    if (!user) {
+      throw new NotFoundException('User does not exist')
+    }
+
+    if (!user.deletedAt) {
+      throw new ConflictException('User is not deleted')
+    }
+
+    await this.userRepository.restore(user)
+    user.isActive = true // 恢复用户的活跃状态
+    await this.userRepository.getEntityManager().flush() // 保存状态变更
+
+    this.logger.info(`User ${user.username}(ID: ${user.id}) has been restored`)
+
+    return user
   }
 
   /**

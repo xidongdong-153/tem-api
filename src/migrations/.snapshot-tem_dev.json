@@ -37,6 +37,17 @@
           "default": "now()",
           "mappedType": "datetime"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "default": "null",
+          "mappedType": "datetime"
+        },
         "name": {
           "name": "name",
           "type": "varchar(100)",
@@ -131,6 +142,17 @@
           "default": "now()",
           "mappedType": "datetime"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "default": "null",
+          "mappedType": "datetime"
+        },
         "name": {
           "name": "name",
           "type": "varchar(50)",
@@ -215,6 +237,17 @@
           "default": "now()",
           "mappedType": "datetime"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "default": "null",
+          "mappedType": "datetime"
+        },
         "username": {
           "name": "username",
           "type": "varchar(50)",
@@ -283,16 +316,6 @@
           "primary": false,
           "nullable": false,
           "default": "true",
-          "mappedType": "boolean"
-        },
-        "is_deleted": {
-          "name": "is_deleted",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
           "mappedType": "boolean"
         },
         "last_login_at": {
@@ -395,6 +418,17 @@
           "nullable": false,
           "length": 6,
           "default": "now()",
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "default": "null",
           "mappedType": "datetime"
         },
         "title": {

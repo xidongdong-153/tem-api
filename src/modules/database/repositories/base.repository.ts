@@ -1,13 +1,14 @@
 import type { FilterQuery, FindOptions, QueryOrderMap } from '@mikro-orm/core'
 import { EntityRepository } from '@mikro-orm/core'
 import { PaginationQueryDto } from '@shared/dtos'
+import { BaseEntity } from '../entities/base.entity'
 import { BasePaginationOptions, PaginationOptions, PaginationResult, PaginationResultWithRelations } from '../types'
 
 /**
  * 基础Repository类
- * 提供通用的分页查询功能，支持关联查询
+ * 提供通用的分页查询功能，支持关联查询和软删除
  */
-export abstract class BaseRepository<Entity extends object> extends EntityRepository<Entity> {
+export abstract class BaseRepository<Entity extends BaseEntity> extends EntityRepository<Entity> {
   /**
    * 统一分页查询方法
    * 支持基础分页和关联查询分页，通过可选参数控制
@@ -118,5 +119,63 @@ export abstract class BaseRepository<Entity extends object> extends EntityReposi
     catch {
       return false
     }
+  }
+
+  /**
+   * 软删除实体
+   * 设置 deletedAt 字段而不是物理删除
+   * @param entity 要删除的实体
+   */
+  async softDelete(entity: Entity): Promise<void> {
+    entity.deletedAt = new Date()
+    await this.getEntityManager().flush()
+  }
+
+  /**
+   * 批量软删除实体
+   * @param entities 要删除的实体数组
+   */
+  async softDeleteMany(entities: Entity[]): Promise<void> {
+    const now = new Date()
+    entities.forEach((entity) => {
+      entity.deletedAt = now
+    })
+    await this.getEntityManager().flush()
+  }
+
+  /**
+   * 恢复软删除的实体
+   * @param entity 要恢复的实体
+   */
+  async restore(entity: Entity): Promise<void> {
+    entity.deletedAt = undefined
+    await this.getEntityManager().flush()
+  }
+
+  /**
+   * 批量恢复软删除的实体
+   * @param entities 要恢复的实体数组
+   */
+  async restoreMany(entities: Entity[]): Promise<void> {
+    entities.forEach((entity) => {
+      entity.deletedAt = undefined
+    })
+    await this.getEntityManager().flush()
+  }
+
+  /**
+   * 硬删除实体（物理删除）
+   * @param entity 要删除的实体
+   */
+  async hardDelete(entity: Entity): Promise<void> {
+    await this.getEntityManager().removeAndFlush(entity)
+  }
+
+  /**
+   * 批量硬删除实体
+   * @param entities 要删除的实体数组
+   */
+  async hardDeleteMany(entities: Entity[]): Promise<void> {
+    await this.getEntityManager().removeAndFlush(entities)
   }
 }

@@ -1,5 +1,6 @@
 import {
   Entity,
+  Filter,
   BaseEntity as MikroBaseEntity,
   PrimaryKey,
   Property,
@@ -8,8 +9,14 @@ import {
 /**
  * 所有实体通用的基础类
  * 使用数据库层面的时间戳管理，避免冗余设置
+ * 支持软删除功能
  */
 @Entity({ abstract: true })
+@Filter({
+  name: 'softDelete',
+  cond: { deletedAt: null },
+  default: true,
+})
 export abstract class BaseEntity extends MikroBaseEntity {
   @PrimaryKey()
   id!: number
@@ -33,4 +40,14 @@ export abstract class BaseEntity extends MikroBaseEntity {
     onUpdate: () => new Date(),
   })
   updatedAt!: Date
+
+  /**
+   * 删除时间 - 软删除标记，null表示未删除
+   */
+  @Property({
+    type: 'timestamptz',
+    nullable: true,
+    default: null,
+  })
+  deletedAt?: Date
 }

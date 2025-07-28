@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Query, UseGuards, ValidationPipe } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, ValidationPipe } from '@nestjs/common'
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { PaginationQueryDto } from '@shared/dtos'
@@ -76,5 +76,15 @@ export class UsersController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.usersService.remove(id)
     return { message: 'User deleted successfully' }
+  }
+
+  /**
+   * 恢复被软删除的用户
+   */
+  @Post(':id/restore')
+  @ApiOperation({ summary: '恢复被软删除的用户' })
+  @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
+  async restore(@Param('id', ParseIntPipe) id: number) {
+    return await this.usersService.restore(id)
   }
 }

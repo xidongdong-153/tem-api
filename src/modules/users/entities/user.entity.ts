@@ -58,13 +58,6 @@ export class UserEntity extends BaseEntity {
   isActive: boolean = true
 
   /**
-   * 是否逻辑删除 - 可用于软删除（隐藏数据但不物理删除）
-   */
-  @Property({ default: false })
-  @Exclude()
-  isDeleted: boolean = false
-
-  /**
    * 最近登录时间 - 可用于统计活跃度或异常检测
    */
   @Property({ nullable: true })

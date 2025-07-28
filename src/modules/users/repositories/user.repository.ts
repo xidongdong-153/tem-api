@@ -52,7 +52,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
    */
   async findAllActive(): Promise<UserEntity[]> {
     return this.find(
-      { isActive: true, isDeleted: false },
+      { isActive: true },
       { orderBy: { createdAt: 'DESC' } },
     )
   }
@@ -63,18 +63,16 @@ export class UserRepository extends BaseRepository<UserEntity> {
   async findActiveById(id: number): Promise<UserEntity | null> {
     return this.findOne({
       id,
-      isDeleted: false,
-
     }, { populate: ['articles'] })
   }
 
   /**
-   * 软删除用户
+   * 软删除用户（继承自 BaseRepository）
+   * 同时设置为非活跃状态
    */
   async softDelete(user: UserEntity): Promise<void> {
     user.isActive = false
-    user.isDeleted = true
-    await this.getEntityManager().flush()
+    await super.softDelete(user)
   }
 
   /**
