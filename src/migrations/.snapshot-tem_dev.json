@@ -85,16 +85,6 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": [
-            "name"
-          ],
-          "composite": false,
-          "keyName": "categories_name_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
           "keyName": "categories_pkey",
           "columnNames": [
             "id"
@@ -179,16 +169,6 @@
       "name": "tags",
       "schema": "public",
       "indexes": [
-        {
-          "columnNames": [
-            "name"
-          ],
-          "composite": false,
-          "keyName": "tags_name_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
         {
           "keyName": "tags_pkey",
           "columnNames": [
@@ -342,36 +322,6 @@
       "name": "users",
       "schema": "public",
       "indexes": [
-        {
-          "columnNames": [
-            "username"
-          ],
-          "composite": false,
-          "keyName": "users_username_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "columnNames": [
-            "email"
-          ],
-          "composite": false,
-          "keyName": "users_email_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "columnNames": [
-            "phone"
-          ],
-          "composite": false,
-          "keyName": "users_phone_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
         {
           "keyName": "users_pkey",
           "columnNames": [

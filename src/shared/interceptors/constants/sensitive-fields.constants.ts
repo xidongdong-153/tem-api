@@ -10,7 +10,6 @@
 export const DEFAULT_SENSITIVE_FIELDS = [
   'passwordHash',
   'password',
-  'isDeleted',
   'lastLoginIp',
   'lastLoginAt',
   'email',

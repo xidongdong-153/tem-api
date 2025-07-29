@@ -1,4 +1,4 @@
-import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property, Unique } from '@mikro-orm/core'
+import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property } from '@mikro-orm/core'
 import { ArticleEntity } from '@modules/articles'
 import { BaseEntity } from '@modules/database'
 import { Exclude, Expose } from 'class-transformer'
@@ -15,21 +15,18 @@ export class UserEntity extends BaseEntity {
    * 用户名 - 可用于登录，要求唯一
    */
   @Property({ length: 50 })
-  @Unique()
   username!: string
 
   /**
    * 邮箱地址 - 用于登录或找回密码，唯一
    */
   @Property({ length: 100 })
-  @Unique()
   email!: string
 
   /**
    * 手机号 - 可选登录方式，唯一
    */
   @Property({ length: 20, nullable: true })
-  @Unique()
   phone?: string
 
   /**

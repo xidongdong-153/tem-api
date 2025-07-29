@@ -3,6 +3,7 @@ import type { PaginationQueryDto } from '../../../shared/dtos'
 import type { CreateUserDto } from '../dtos/create-user.dto'
 import type { UpdateUserDto } from '../dtos/update-user.dto'
 
+import { BaseService } from '@modules/database'
 import { LoggerService } from '@modules/logger'
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { UserEntity } from '../entities'
@@ -12,11 +13,21 @@ import { UserRepository } from '../repositories'
  * 用户服务 - 使用 Repository 模式
  */
 @Injectable()
-export class UsersService {
+export class UsersService extends BaseService<UserEntity> {
   constructor(
-    private readonly logger: LoggerService,
     private readonly userRepository: UserRepository,
-  ) {}
+    protected readonly loggerService: LoggerService,
+  ) {
+    super(userRepository, loggerService)
+  }
+
+  protected getEntityName(): string {
+    return 'User'
+  }
+
+  protected getEntityDisplayName(entity: UserEntity): string {
+    return entity.username
+  }
 
   /**
    * 创建新用户
@@ -107,12 +118,13 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const user = await this.findOne(id) // 复用查找逻辑
 
-    // 检查用户名和邮箱是否已被其他用户使用
-    if (updateUserDto.username || updateUserDto.email) {
+    // 检查用户名、邮箱和手机号是否已被其他用户使用
+    if (updateUserDto.username || updateUserDto.email || updateUserDto.phone) {
       const existingUser = await this.userRepository.checkUserExistsExcluding(
         updateUserDto.username !== user.username ? updateUserDto.username : undefined,
         updateUserDto.email !== user.email ? updateUserDto.email : undefined,
         id,
+        updateUserDto.phone !== user.phone ? updateUserDto.phone : undefined,
       )
 
       if (existingUser) {
@@ -121,6 +133,9 @@ export class UsersService {
         }
         if (updateUserDto.email && existingUser.email === updateUserDto.email) {
           throw new ConflictException('Email already exists')
+        }
+        if (updateUserDto.phone && existingUser.phone === updateUserDto.phone) {
+          throw new ConflictException('Phone number already exists')
         }
       }
     }
@@ -136,51 +151,29 @@ export class UsersService {
   /**
    * 删除用户（软删除 - 设置为不活跃状态）
    */
-  async remove(id: number): Promise<void> {
-    const user = await this.findOne(id) // 复用查找逻辑
-
-    await this.userRepository.softDelete(user)
-
-    this.logger.info(`User ${user.username}(ID: ${user.id}) has been soft deleted`)
-  }
+  // 软删除、恢复、硬删除方法现在由 BaseService 提供
+  // 如果需要特殊逻辑，可以重写这些方法
 
   /**
-   * 恢复被软删除的用户
+   * 重写恢复方法以处理用户特有的 isActive 状态
    */
   async restore(id: number): Promise<UserEntity> {
-    // 查找时需要禁用softDelete过滤器，才能找到被软删除的实体
-    const user = await this.userRepository.findOne(
-      { id },
-      { filters: { softDelete: false } },
-    )
+    const user = await super.restore(id)
 
-    if (!user) {
-      throw new NotFoundException('User does not exist')
-    }
-
-    if (!user.deletedAt) {
-      throw new ConflictException('User is not deleted')
-    }
-
-    await this.userRepository.restore(user)
-    user.isActive = true // 恢复用户的活跃状态
-    await this.userRepository.getEntityManager().flush() // 保存状态变更
-
-    this.logger.info(`User ${user.username}(ID: ${user.id}) has been restored`)
+    // 恢复用户的活跃状态
+    user.isActive = true
+    await this.userRepository.getEntityManager().flush()
 
     return user
   }
 
-  /**
-   * 硬删除用户（真正从数据库中删除）
-   * 注意：这个方法应该谨慎使用，建议只在特殊情况下使用
-   */
+  // 为了保持向后兼容，保留原有的方法名
+  async remove(id: number): Promise<void> {
+    return this.softDelete(id)
+  }
+
   async forceRemove(id: number): Promise<void> {
-    const user = await this.findOne(id)
-
-    await this.userRepository.hardDelete(user)
-
-    this.logger.warn(`User ${user.username}(ID: ${user.id}) has been hard deleted`)
+    return this.hardDelete(id)
   }
 
   /**

@@ -9,32 +9,43 @@ import { UserEntity } from '../entities/user.entity'
  */
 export class UserRepository extends BaseRepository<UserEntity> {
   /**
-   * 检查用户名或邮箱是否已存在
+   * 检查用户名、邮箱或手机号是否已存在（排除已软删除的用户）
    */
-  async checkUserExists(username: string, email: string): Promise<UserEntity | null> {
+  async checkUserExists(username: string, email: string, phone?: string): Promise<UserEntity | null> {
+    const conditions: Array<{ username?: string, email?: string, phone?: string }> = [
+      { username },
+      { email },
+    ]
+
+    if (phone) {
+      conditions.push({ phone })
+    }
+
     return this.findOne({
-      $or: [
-        { username },
-        { email },
-      ],
+      $or: conditions,
+      deletedAt: null, // 只检查未删除的用户
     })
   }
 
   /**
-   * 检查用户名或邮箱是否被其他用户使用（排除指定用户ID）
+   * 检查用户名、邮箱或手机号是否被其他用户使用（排除指定用户ID和已软删除的用户）
    */
   async checkUserExistsExcluding(
     username: string | undefined,
     email: string | undefined,
     excludeId: number,
+    phone?: string | undefined,
   ): Promise<UserEntity | null> {
-    const conditions: Array<{ username?: string, email?: string }> = []
+    const conditions: Array<{ username?: string, email?: string, phone?: string }> = []
 
     if (username) {
       conditions.push({ username })
     }
     if (email) {
       conditions.push({ email })
+    }
+    if (phone) {
+      conditions.push({ phone })
     }
 
     if (conditions.length === 0) {
@@ -44,6 +55,7 @@ export class UserRepository extends BaseRepository<UserEntity> {
     return this.findOne({
       $or: conditions,
       id: { $ne: excludeId },
+      deletedAt: null, // 只检查未删除的用户
     })
   }
 

@@ -58,7 +58,7 @@ export class UsersController {
   @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
   @ApiBody({ type: UpdateUserDto })
   @Response({
-    exclude: ['passwordHash', 'isDeleted', 'lastLoginIp'],
+    exclude: ['passwordHash', 'deletedAt', 'lastLoginIp'],
   })
   async update(
     @Param('id', ParseIntPipe) id: number,

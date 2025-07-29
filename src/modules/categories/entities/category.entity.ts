@@ -1,5 +1,5 @@
 import type { ArticleEntity } from '@modules/articles'
-import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property, Unique } from '@mikro-orm/core'
+import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property } from '@mikro-orm/core'
 import { BaseEntity } from '@modules/database'
 import { Expose } from 'class-transformer'
 import { CategoryRepository } from '../repositories'
@@ -12,7 +12,6 @@ export class CategoryEntity extends BaseEntity {
   [EntityRepositoryType]?: CategoryRepository
 
   @Property({ length: 100, comment: '分类名称' })
-  @Unique()
   name!: string
 
   @Property({ type: 'text', comment: '分类描述' })

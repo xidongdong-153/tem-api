@@ -11,7 +11,7 @@ import { TagRepository } from '../repositories'
 export class TagEntity extends BaseEntity {
   [EntityRepositoryType]?: TagRepository
 
-  @Property({ length: 50, unique: true, comment: '标签名称' })
+  @Property({ length: 50, comment: '标签名称' })
   name!: string
 
   @Property({ default: 0, comment: '使用次数' })

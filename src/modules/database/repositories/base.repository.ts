@@ -178,4 +178,50 @@ export abstract class BaseRepository<Entity extends BaseEntity> extends EntityRe
   async hardDeleteMany(entities: Entity[]): Promise<void> {
     await this.getEntityManager().removeAndFlush(entities)
   }
+
+  /**
+   * 根据ID直接软删除实体
+   * @param id 实体ID
+   */
+  async softDeleteById(id: number): Promise<void> {
+    const entity = await this.findOne({ id } as FilterQuery<Entity>)
+    if (!entity) {
+      throw new Error(`Entity with ID ${id} not found`)
+    }
+    await this.softDelete(entity)
+  }
+
+  /**
+   * 根据ID直接恢复实体
+   * @param id 实体ID
+   */
+  async restoreById(id: number): Promise<Entity> {
+    const entity = await this.findOne(
+      { id } as FilterQuery<Entity>,
+      { filters: { softDelete: false } },
+    )
+    if (!entity) {
+      throw new Error(`Entity with ID ${id} not found`)
+    }
+    if (!entity.deletedAt) {
+      throw new Error(`Entity with ID ${id} is not deleted`)
+    }
+    await this.restore(entity)
+    return entity
+  }
+
+  /**
+   * 根据ID直接硬删除实体
+   * @param id 实体ID
+   */
+  async hardDeleteById(id: number): Promise<void> {
+    const entity = await this.findOne(
+      { id } as FilterQuery<Entity>,
+      { filters: { softDelete: false } },
+    )
+    if (!entity) {
+      throw new Error(`Entity with ID ${id} not found`)
+    }
+    await this.hardDelete(entity)
+  }
 }

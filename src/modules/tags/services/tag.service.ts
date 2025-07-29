@@ -1,15 +1,34 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { BaseService } from '@modules/database'
+import { LoggerService } from '@modules/logger'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { CreateTagDto } from '../dtos'
 import { TagEntity } from '../entities'
 import { TagRepository } from '../repositories'
 
 @Injectable()
-export class TagService {
-  private readonly logger = new Logger(TagService.name)
+export class TagService extends BaseService<TagEntity> {
+  constructor(
+    private readonly tagRepository: TagRepository,
+    protected readonly loggerService: LoggerService,
+  ) {
+    super(tagRepository, loggerService)
+  }
 
-  constructor(private readonly tagRepository: TagRepository) {}
+  protected getEntityName(): string {
+    return 'Tag'
+  }
+
+  protected getEntityDisplayName(entity: TagEntity): string {
+    return entity.name
+  }
 
   async createTag(createTagDto: CreateTagDto) {
+    // 检查标签名称是否已存在（排除已软删除的标签）
+    const existingTag = await this.tagRepository.checkTagExists(createTagDto.name)
+    if (existingTag) {
+      throw new ConflictException('Tag name already exists')
+    }
+
     return this.tagRepository.createTag(createTagDto)
   }
 
@@ -32,56 +51,6 @@ export class TagService {
     return tag
   }
 
-  /**
-   * 软删除标签
-   */
-  async softDelete(id: number): Promise<void> {
-    const tag = await this.findById(id)
-    
-    await this.tagRepository.softDelete(tag)
-    this.logger.log(`Tag ${tag.name}(ID: ${tag.id}) has been soft deleted`)
-  }
-
-  /**
-   * 恢复被软删除的标签
-   */
-  async restore(id: number): Promise<TagEntity> {
-    // 查找时需要禁用softDelete过滤器，才能找到被软删除的实体
-    const tag = await this.tagRepository.findOne(
-      { id },
-      { filters: { softDelete: false } },
-    )
-
-    if (!tag) {
-      throw new NotFoundException('Tag does not exist')
-    }
-
-    if (!tag.deletedAt) {
-      throw new ConflictException('Tag is not deleted')
-    }
-
-    await this.tagRepository.restore(tag)
-    this.logger.log(`Tag ${tag.name}(ID: ${tag.id}) has been restored`)
-
-    return tag
-  }
-
-  /**
-   * 硬删除标签（真正从数据库中删除）
-   * 注意：这个方法应该谨慎使用，建议只在特殊情况下使用
-   */
-  async hardDelete(id: number): Promise<void> {
-    // 查找时需要禁用softDelete过滤器
-    const tag = await this.tagRepository.findOne(
-      { id },
-      { filters: { softDelete: false } },
-    )
-
-    if (!tag) {
-      throw new NotFoundException('Tag does not exist')
-    }
-
-    await this.tagRepository.hardDelete(tag)
-    this.logger.warn(`Tag ${tag.name}(ID: ${tag.id}) has been permanently deleted`)
-  }
+  // 软删除、恢复、硬删除方法现在由 BaseService 提供
+  // 如果需要特殊逻辑，可以重写这些方法
 }
