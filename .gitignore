@@ -73,3 +73,6 @@ docker/
 src/metadata.ts
 
 /.cursor
+
+# PromptX角色资源目录
+.promptx/
