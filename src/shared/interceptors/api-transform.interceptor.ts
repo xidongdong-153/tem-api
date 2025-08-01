@@ -27,17 +27,17 @@ import {
 } from './constants'
 
 /**
- * 响应拦截器
+ * API 数据转换拦截器
  *
  * 主要功能：
- * - 统一响应格式处理
- * - 敏感字段过滤
- * - 分页数据处理
+ * - 统一 API 响应格式处理
+ * - 敏感字段过滤和数据清洗
+ * - 分页数据结构转换
  * - 请求/响应日志记录
- * - MikroORM 实体序列化
+ * - MikroORM 实体序列化优化
  */
 @Injectable()
-export class ResponseInterceptor implements NestInterceptor {
+export class ApiTransformInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
     private readonly logger: LoggerService,
@@ -227,7 +227,7 @@ export class ResponseInterceptor implements NestInterceptor {
   private serializeEntity(entity: object, excludeFields: string[], context?: ExecutionContext): Record<string, unknown> {
     const result: Record<string, unknown> = {}
     const options = context ? this.getResponseOptions(context) : {}
-    const relationStrategy = options.relations || 'basic' // 默认基础关联策略
+    const relationStrategy = options.relationStrategy || 'basic' // 默认基础关联策略
 
     for (const [key, value] of Object.entries(entity)) {
       // 跳过私有属性和排除的字段
@@ -269,35 +269,24 @@ export class ResponseInterceptor implements NestInterceptor {
     collection: Collection<object>,
     strategy: string,
     excludeFields: string[],
-    context?: ExecutionContext,
+    _context?: ExecutionContext,
   ): unknown {
     switch (strategy) {
       case 'none':
         return undefined // 不序列化关联
 
-      case 'count':
-        return { count: this.getCollectionCount(collection) }
-
       case 'basic':
-        // 已初始化则序列化基本字段，否则显示数量
+        // 已初始化则序列化标识字段
         if (collection.isInitialized()) {
           const items = collection.getItems()
           return items.length > 0
-            ? items.map(item => this.serializeEntityBasicFields(item, excludeFields))
+            ? items.map(item => this.serializeEntityIdentifier(item, excludeFields))
             : []
         }
-        return { count: this.getCollectionCount(collection) }
-
-      case 'full':
-        // 完整序列化（需谨慎使用）
-        if (collection.isInitialized()) {
-          const items = collection.getItems()
-          return items.map(item => this.filterSensitiveFields(item, excludeFields, context))
-        }
-        return { count: this.getCollectionCount(collection) }
+        return undefined // 未初始化则不返回
 
       default:
-        return { count: this.getCollectionCount(collection) }
+        return undefined
     }
   }
 
@@ -308,26 +297,18 @@ export class ResponseInterceptor implements NestInterceptor {
     entity: object,
     strategy: string,
     excludeFields: string[],
-    context?: ExecutionContext,
+    _context?: ExecutionContext,
   ): unknown {
     switch (strategy) {
       case 'none':
         return undefined // 不序列化关联
 
-      case 'count':
-        // 对于单个实体，返回标识字段
+      case 'basic':
+        // 序列化标识字段
         return this.serializeEntityIdentifier(entity, excludeFields)
 
-      case 'basic':
-        // 序列化基本字段
-        return this.serializeEntityBasicFields(entity, excludeFields)
-
-      case 'full':
-        // 完整序列化（需谨慎使用）
-        return this.filterSensitiveFields(entity, excludeFields, context)
-
       default:
-        return this.serializeEntityBasicFields(entity, excludeFields)
+        return this.serializeEntityIdentifier(entity, excludeFields)
     }
   }
 
@@ -443,15 +424,6 @@ export class ResponseInterceptor implements NestInterceptor {
   /**
    * 安全地获取 Collection 的数量
    */
-  private getCollectionCount(collection: Collection<object>): number {
-    try {
-      // 已初始化的集合返回实际长度，否则返回 -1 表示未知
-      return collection.isInitialized() ? collection.length : -1
-    }
-    catch {
-      return -1 // 出错时返回 -1
-    }
-  }
 
   // ================================
   // 日志记录方法

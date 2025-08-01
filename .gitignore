@@ -76,3 +76,4 @@ src/metadata.ts
 
 # PromptX角色资源目录
 .promptx/
+docs/TEM-API/

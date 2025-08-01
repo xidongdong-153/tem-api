@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs
 
 import { PaginationQueryDto } from '@shared/dtos'
 import { JwtAuthGuard } from '@shared/guards'
-import { Response } from '@shared/interceptors'
+import { ApiTransform } from '@shared/interceptors'
 import { UpdateUserDto } from '../dtos'
 import { UsersService } from '../services/users.service'
 
@@ -42,9 +42,9 @@ export class UsersController {
   @Get(':id')
   @ApiOperation({ summary: '根据ID获取用户详情' })
   @ApiParam({ name: 'id', description: '用户ID', type: 'number', required: true })
-  @Response({
+  @ApiTransform({
     groups: ['profile'],
-    relations: 'basic', // 显示关联数据的基本信息
+    relationStrategy: 'basic', // 显示关联数据的基本信息
   })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.usersService.findOne(id)
@@ -57,7 +57,7 @@ export class UsersController {
   @ApiOperation({ summary: '更新用户信息' })
   @ApiParam({ name: 'id', description: '用户ID', type: 'number' })
   @ApiBody({ type: UpdateUserDto })
-  @Response({
+  @ApiTransform({
     exclude: ['passwordHash', 'deletedAt', 'lastLoginIp'],
   })
   async update(

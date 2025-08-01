@@ -2,7 +2,7 @@ import { UserEntity } from '@modules/users/entities'
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query, Request, UseGuards, ValidationPipe } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@shared/guards'
-import { Response } from '@shared/interceptors'
+import { ApiTransform } from '@shared/interceptors'
 import { CreateArticleDto, ListArticlesDto, UpdateArticleDto } from '../dtos'
 import { ArticleService } from '../services'
 
@@ -15,8 +15,8 @@ export class ArticleController {
 
   @Get()
   @ApiOperation({ summary: '分页查询文章列表' })
-  @Response({
-    relations: 'count',
+  @ApiTransform({
+    relationStrategy: 'basic',
   })
   async findPaginated(@Query(ValidationPipe) listDto: ListArticlesDto) {
     return this.articleService.findPaginated(listDto)
@@ -33,8 +33,8 @@ export class ArticleController {
 
   @Get(':id')
   @ApiOperation({ summary: '根据ID获取文章详情' })
-  @Response({
-    relations: 'count',
+  @ApiTransform({
+    relationStrategy: 'basic',
   })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.findOneWithRelations(id)

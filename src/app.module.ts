@@ -12,7 +12,7 @@ import { ConfigModule } from './modules/config/config.module'
 import { DatabaseModule } from './modules/database/database.module'
 import { TagsModule } from './modules/tags'
 import { UsersModule } from './modules/users'
-import { GlobalExceptionFilter, ResponseInterceptor } from './shared'
+import { ApiTransformInterceptor, GlobalExceptionFilter } from './shared'
 
 @Module({
   imports: [
@@ -49,7 +49,7 @@ import { GlobalExceptionFilter, ResponseInterceptor } from './shared'
     // 全局响应拦截器
     {
       provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
+      useClass: ApiTransformInterceptor,
     },
   ],
 })

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger'
 
-import { JwtAuthGuard, Response } from 'src/shared'
+import { ApiTransform, JwtAuthGuard } from 'src/shared'
 import { UserEntity } from '../../users/entities'
 import { ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from '../dtos'
 import { AuthService } from '../services/auth.service'
@@ -49,7 +49,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '获取当前用户信息' })
-  @Response({
+  @ApiTransform({
     groups: ['profile'],
   })
   async getProfile(@Request() req: { user: UserEntity }) {

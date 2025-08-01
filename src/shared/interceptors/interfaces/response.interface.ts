@@ -1,5 +1,5 @@
 /**
- * 响应拦截器相关接口定义
+ * API 数据转换拦截器相关接口定义
  */
 
 /**
@@ -57,10 +57,10 @@ export interface PaginatedResult<T = unknown> {
 /**
  * 关联数据显示策略
  */
-export type RelationDisplayStrategy = 'none' | 'count' | 'basic' | 'full'
+export type RelationDisplayStrategy = 'none' | 'basic'
 
 /**
- * 响应装饰器选项
+ * API 转换装饰器选项
  */
 export interface ResponseOptions {
   // 消息
@@ -72,7 +72,7 @@ export interface ResponseOptions {
   // 序列化分组
   groups?: string[]
   // 关联数据显示策略
-  relations?: RelationDisplayStrategy
+  relationStrategy?: RelationDisplayStrategy
 }
 
 /**

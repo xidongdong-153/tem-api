@@ -1,5 +1,5 @@
 import type { ArticleEntity } from '@modules/articles'
-import { Cascade, Collection, Entity, EntityRepositoryType, OneToMany, Property } from '@mikro-orm/core'
+import { Cascade, Collection, Entity, EntityRepositoryType, Index, OneToMany, Property } from '@mikro-orm/core'
 import { BaseEntity } from '@modules/database'
 import { Expose } from 'class-transformer'
 import { CategoryRepository } from '../repositories'
@@ -11,12 +11,14 @@ import { CategoryRepository } from '../repositories'
 export class CategoryEntity extends BaseEntity {
   [EntityRepositoryType]?: CategoryRepository
 
+  @Index()
   @Property({ length: 100, comment: '分类名称' })
   name!: string
 
   @Property({ type: 'text', comment: '分类描述' })
   description!: string
 
+  @Index()
   @Property({ default: 0, comment: '排序' })
   sortOrder!: number
 

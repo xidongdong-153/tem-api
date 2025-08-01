@@ -1,1 +1,1 @@
-export * from './response.decorator'
+export { ApiTransform } from './api-transform.decorator'

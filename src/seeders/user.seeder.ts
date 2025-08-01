@@ -19,7 +19,7 @@ export class UserSeeder extends Seeder {
     }
 
     const saltRounds = 10
-    const defaultPassword = await bcrypt.hash('123456', saltRounds)
+    const defaultPassword = await bcrypt.hash('password123', saltRounds)
 
     const users = [
       {

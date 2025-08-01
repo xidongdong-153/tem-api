@@ -1,13 +1,13 @@
 /**
- * 响应相关常量
- * 包含响应拦截器、装饰器等使用的常量定义
+ * API 数据转换相关常量
+ * 包含 API 转换拦截器、装饰器等使用的常量定义
  */
 
 /**
- * 响应选项元数据键
- * 用于在控制器方法上存储响应配置选项
+ * API 转换选项元数据键
+ * 用于在控制器方法上存储 API 转换配置选项
  */
-export const RESPONSE_OPTIONS_KEY = 'response:options'
+export const RESPONSE_OPTIONS_KEY = 'api-transform:options'
 
 /**
  * 响应模式常量

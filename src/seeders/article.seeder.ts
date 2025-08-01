@@ -49,13 +49,14 @@ export class ArticleSeeder extends Seeder {
   private createArticles(users: UserEntity[], categories: CategoryEntity[], tags: TagEntity[]) {
     const getRandomUser = () => users[Math.floor(Math.random() * users.length)]
     const getRandomCategory = () => categories[Math.floor(Math.random() * categories.length)]
-    const _getRandomTags = (count: number = 3) => {
+    const getRandomTags = (count: number = 3) => {
       const shuffled = [...tags].sort(() => 0.5 - Math.random())
       return shuffled.slice(0, count)
     }
 
     return [
       {
+        tags: getRandomTags(),
         title: 'NestJS 入门指南：构建现代化的 Node.js 应用',
         content: `# NestJS 入门指南
 

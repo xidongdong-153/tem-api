@@ -1,5 +1,8 @@
+// 导出拦截器
+export { ApiTransformInterceptor } from './api-transform.interceptor'
+
 // 导出装饰器
-export { Response } from './decorators'
+export { ApiTransform } from './decorators'
 
 // 导出接口
 export type {
@@ -10,6 +13,3 @@ export type {
   PaginationMeta,
   ResponseOptions,
 } from './interfaces/response.interface'
-
-// 导出拦截器
-export { ResponseInterceptor } from './response.interceptor'

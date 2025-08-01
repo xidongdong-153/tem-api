@@ -1,5 +1,5 @@
 import type { ArticleEntity } from '@modules/articles'
-import { Cascade, Collection, Entity, EntityRepositoryType, ManyToMany, Property } from '@mikro-orm/core'
+import { Cascade, Collection, Entity, EntityRepositoryType, Index, ManyToMany, Property } from '@mikro-orm/core'
 import { BaseEntity } from '@modules/database'
 import { Exclude } from 'class-transformer'
 import { TagRepository } from '../repositories'
@@ -11,7 +11,8 @@ import { TagRepository } from '../repositories'
 export class TagEntity extends BaseEntity {
   [EntityRepositoryType]?: TagRepository
 
-  @Property({ length: 50, comment: '标签名称' })
+  @Index()
+  @Property({ length: 50, unique: true, comment: '标签名称' })
   name!: string
 
   @Property({ default: 0, comment: '使用次数' })

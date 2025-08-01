@@ -1,6 +1,6 @@
 import type { CategoryEntity } from '@modules/categories'
 import type { UserEntity } from '@modules/users'
-import { Cascade, Collection, Entity, EntityRepositoryType, Enum, ManyToMany, ManyToOne, Property } from '@mikro-orm/core'
+import { Cascade, Collection, Entity, EntityRepositoryType, Enum, Index, ManyToMany, ManyToOne, Property } from '@mikro-orm/core'
 import { BaseEntity } from '@modules/database'
 import { TagEntity } from '@modules/tags'
 import { ArticleRepository } from '../repositories/article.repository'
@@ -21,6 +21,7 @@ export enum ArticleStatus {
 export class ArticleEntity extends BaseEntity {
   [EntityRepositoryType]?: ArticleRepository
 
+  @Index()
   @Property({ length: 200, comment: '文章标题' })
   title!: string
 
@@ -30,10 +31,12 @@ export class ArticleEntity extends BaseEntity {
   @Property({ type: 'text', comment: '文章摘要' })
   summary!: string
 
+  @Index()
   @Enum(() => ArticleStatus)
   @Property({ default: ArticleStatus.DRAFT, comment: '文章状态' })
   status: ArticleStatus = ArticleStatus.DRAFT
 
+  @Index()
   @Property({ nullable: true, comment: '发布时间' })
   publishedAt?: Date
 
@@ -44,6 +47,7 @@ export class ArticleEntity extends BaseEntity {
   @ManyToOne('UserEntity', {
     lazy: true,
     nullable: true,
+    deleteRule: 'set null',
   })
   author?: UserEntity
 
@@ -54,6 +58,7 @@ export class ArticleEntity extends BaseEntity {
   @ManyToOne('CategoryEntity', {
     lazy: true,
     nullable: true,
+    deleteRule: 'set null',
   })
   category?: CategoryEntity
 
@@ -64,7 +69,7 @@ export class ArticleEntity extends BaseEntity {
   @ManyToMany(() => TagEntity, tag => tag.articles, {
     owner: true,
     lazy: true,
-    cascade: [Cascade.PERSIST],
+    cascade: [Cascade.PERSIST, Cascade.MERGE],
   })
   tags = new Collection<TagEntity>(this)
 }
